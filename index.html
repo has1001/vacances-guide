@@ -69,11 +69,25 @@
   /* ===== HERO ===== */
   .hero {
     position: relative;
-    padding: 36px 16px 28px;
+    padding: 32px 16px 28px;
     text-align: center;
     overflow: hidden;
-    background: var(--peach);
+    background: #ffffff;
   }
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: -20% -10% auto -10%;
+    height: 220px;
+    background: radial-gradient(ellipse at center, var(--peach) 0%, rgba(247,221,201,0) 72%);
+    z-index: 0;
+    animation: floatBlob 8s ease-in-out infinite;
+  }
+  @keyframes floatBlob {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(10px) scale(1.04); }
+  }
+  .hero > * { position: relative; z-index: 1; }
   .hero .eyebrow {
     display: inline-block;
     font-size: 11px;
@@ -83,32 +97,40 @@
     background: var(--pink);
     padding: 5px 12px;
     border-radius: 999px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
+    animation: fadeUp 0.6s ease both;
   }
-  .hero h1 {
-    font-size: 52px;
-    margin: 0;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    line-height: 1;
-    font-style: italic;
+  .hero .logo {
+    max-width: 340px;
+    width: 78%;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+    animation: fadeUp 0.7s ease 0.05s both;
   }
   .hero h2.sub {
     font-size: 17px;
-    margin: 8px 0 12px;
+    margin: 14px 0 12px;
     font-weight: 800;
+    animation: fadeUp 0.7s ease 0.1s both;
   }
   .hero p.lead {
     font-size: 13px;
     color: var(--muted);
     max-width: 420px;
     margin: 0 auto 20px;
+    animation: fadeUp 0.7s ease 0.15s both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .search-wrap {
     max-width: 480px;
     margin: 0 auto;
     position: relative;
+    animation: fadeUp 0.7s ease 0.2s both;
   }
   .search-wrap input {
     width: 100%;
@@ -130,15 +152,20 @@
     opacity: 0.5;
   }
 
-  /* ===== FILTER BAR ===== */
-  .filter-bar {
+  /* ===== STICKY CONTROLS (filter + map) ===== */
+  .sticky-controls {
     position: sticky;
     top: 45px;
     z-index: 20;
-    background: rgba(250,245,236,0.95);
+    background: rgba(250,245,236,0.97);
     backdrop-filter: blur(8px);
-    padding: 12px 16px;
     border-bottom: 1px solid var(--line);
+    box-shadow: 0 6px 16px rgba(35,32,66,0.06);
+  }
+
+  /* ===== FILTER BAR ===== */
+  .filter-bar {
+    padding: 10px 16px 8px;
   }
   .filter-inner {
     max-width: 1100px;
@@ -158,16 +185,19 @@
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
+    transition: transform 0.12s ease, background 0.15s ease, color 0.15s ease;
   }
   .chip .ico { margin-right: 4px; }
   .chip.active {
     background: var(--ink);
     color: #fff;
+    transform: scale(1.04);
   }
+  .chip:active { transform: scale(0.94); }
 
   /* ===== MAP ===== */
   .map-section {
-    padding: 16px;
+    padding: 8px 16px 12px;
     max-width: 1100px;
     margin: 0 auto;
   }
@@ -175,23 +205,24 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   .map-section h2 {
-    font-size: 15px;
+    font-size: 13px;
     margin: 0;
     font-weight: 900;
   }
   .map-section .map-hint {
-    font-size: 11px;
+    font-size: 10.5px;
     color: var(--muted);
   }
   #leafletMap {
-    height: 320px;
-    border-radius: 18px;
+    height: 190px;
+    border-radius: 16px;
     border: 3px solid #fff;
     box-shadow: 0 8px 24px rgba(35,32,66,0.12);
     overflow: hidden;
+    transition: height 0.25s ease;
   }
   .leaflet-pin {
     width: 24px;
@@ -244,12 +275,20 @@
     position: relative;
     padding: 14px 16px 14px;
     cursor: pointer;
-    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, transform 0.15s ease;
+    animation: cardIn 0.4s ease both;
+  }
+  .card:active { transform: scale(0.98); }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   .card.selected {
-    border-color: var(--ink);
+    border-color: var(--cat-color, var(--ink));
     border-left-color: var(--cat-color, var(--purple));
+    background: color-mix(in srgb, var(--cat-color, var(--purple)) 12%, #fff);
     box-shadow: 0 6px 18px rgba(35,32,66,0.14);
+    transform: translateY(-1px);
   }
   .card .selected-badge {
     display: none;
@@ -316,9 +355,12 @@
     text-decoration: none;
     background: var(--ink);
     color: #fff;
+    transition: transform 0.12s ease, opacity 0.12s ease;
   }
+  .card .detail-btn:active { transform: scale(0.95); opacity: 0.85; }
   .card .detail-btn.search { background: #fff; color: var(--ink); border: 2px solid var(--line); }
   .card.venue { background: linear-gradient(135deg, var(--peach), #ffffff); }
+  .card.venue.selected { background: color-mix(in srgb, var(--cat-color, var(--orange)) 16%, #fff); }
   .card.hidden { display: none; }
 
   .empty-state {
@@ -418,14 +460,19 @@
     color: #fff;
     border: none;
     font-size: 18px;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 6px 18px rgba(35,32,66,0.3);
     cursor: pointer;
     z-index: 40;
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
-  .back-to-top.show { display: flex; }
+  .back-to-top.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+  .back-to-top:active { transform: scale(0.9); }
 
   /* ===== LOAD MORE ===== */
   .load-more-wrap {
@@ -446,15 +493,15 @@
 
   /* ===== DESKTOP ===== */
   @media (min-width: 640px) {
-    .hero { padding: 56px 24px 36px; }
-    .hero h1 { font-size: 68px; }
+    .hero { padding: 48px 24px 36px; }
+    .hero .logo { max-width: 440px; }
     .hero h2.sub { font-size: 20px; }
-    #leafletMap { height: 420px; }
+    #leafletMap { height: 260px; }
     .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   }
   @media (min-width: 960px) {
     .grid { grid-template-columns: repeat(3, 1fr); }
-    #leafletMap { height: 480px; }
+    #leafletMap { height: 300px; }
   }
 </style>
 </head>
@@ -467,25 +514,27 @@
 
   <section class="hero">
     <span class="eyebrow">VACANCES OFFICIAL GUIDE</span>
-    <h1>Vacances</h1>
+    <img class="logo" src="vacances_logo_black.png" alt="Vacances">
     <h2 class="sub">江ノ島 & 鎌倉とっておきスポット</h2>
-    <p class="lead">観光・グルメ・宿泊まで、地元で愛されるスポットを132件厳選。気になるお店をタップすると、地図でも場所がわかります。</p>
+    <p class="lead">観光・グルメ・宿泊まで、地元で愛されるスポットを155件厳選。気になるお店をタップすると、地図でも場所がわかります。</p>
     <div class="search-wrap">
       <span class="icon">🔍</span>
       <input id="searchInput" type="text" placeholder="お店・スポット名で検索">
     </div>
   </section>
 
-  <div class="filter-bar">
-    <div class="filter-inner" id="filterBar"></div>
-  </div>
-
-  <div class="map-section">
-    <div class="map-head">
-      <h2>📍 エリアマップ</h2>
-      <span class="map-hint">お店をタップで地図と連動</span>
+  <div class="sticky-controls">
+    <div class="filter-bar">
+      <div class="filter-inner" id="filterBar"></div>
     </div>
-    <div id="leafletMap"></div>
+
+    <div class="map-section">
+      <div class="map-head">
+        <h2>📍 エリアマップ</h2>
+        <span class="map-hint">お店をタップで地図と連動</span>
+      </div>
+      <div id="leafletMap"></div>
+    </div>
   </div>
 
   <div class="result-count"><b id="resultNum">0</b> 件表示中</div>
@@ -537,6 +586,8 @@
     other:   { label: "その他グルメ",   hex: "#4a7bff", icon: "🍽️" },
     lodging: { label: "宿泊",           hex: "#a5714f", icon: "🏨" },
   };
+
+  const CATEGORY_ORDER = ["venue", "sight", "lodging", "onsen", "yoshoku", "cafe", "washoku", "seafood", "ramen", "chuka", "sweets", "bar", "souvenir", "other"];
 
   const SPOTS = [
     { name: "OPPA-LA", cat: "venue", price: "お手頃", tag: "カレー", note: "Vacancesの会場となるカレーダイナー。江ノ島を望むロケーションで、スパイス香る自家製カレーとお酒を片手に、パーティー前後もゆったり過ごせる。", url: "https://oppa-la.net/", urlType: "official", lat: 35.3038, lng: 139.4825 },
@@ -671,6 +722,29 @@
     { name: "Guest House Kamejikan Zaimokuza (IORI)", cat: "lodging", note: "材木座エリアの古民家系ゲストハウス。光明寺すぐ近く、畳と布団で和の宿体験。¥4,000〜6,000程度", url: "https://kamejikan.com/en/about/zaimokuza", urlType: "official" },
     { name: "Shonan Enoshima Seaside Guest House", cat: "lodging", note: "江ノ島近くの気取らないゲストハウス。ビーチアクセス良好でカジュアルな滞在向け。¥5,000〜9,000", url: "https://www.agoda.com/shonan-enoshima-seaside-guest-house/hotel/kamakura-jp.html", urlType: "official" },
     { name: "Space Key Point Riviera Zushi Marina", cat: "lodging", note: "逗子マリーナ内の未来的な円形ガラス張り客室。海を独り占めできるグランピング風ラグジュアリー宿泊", url: "https://en.riviera.co.jp/space_key_point/zushi/index.html", urlType: "official" },
+    { name: "食堂いのうえ", cat: "washoku", note: "片瀬江ノ島駅近くの定食屋、新鮮なしらすや刺身、金目鯛煮付けが人気の地元食堂", url: "https://inoue-enoshima.com/", urlType: "official" },
+    { name: "江の島らぁ麺 片瀬商店", cat: "ramen", note: "片瀬漁港直送の地魚だしを使ったご当地ラーメン、しらす塩らぁ麺が名物", url: "https://www.shonan-navi.net/shop/shop.shtml?s=5755", urlType: "official" },
+    { name: "らーめん晴れる屋", cat: "ramen", note: "江ノ島駅近くの気軽なラーメン店、丼メニューも充実したカジュアル食堂", url: "https://www.hotpepper.jp/strJ000224136/", urlType: "official", lat: 35.3099495, lng: 139.4867207 },
+    { name: "アロハテーブル湘南江の島", cat: "washoku", note: "片瀬江ノ島駅徒歩10分、海を感じるハワイアンカフェダイニング", url: "https://www.google.com/search?q=%E3%82%A2%E3%83%AD%E3%83%8F%E3%83%86%E3%83%BC%E3%83%96%E3%83%AB%E6%B9%98%E5%8D%97%E6%B1%9F%E3%81%AE%E5%B3%B6%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search" },
+    { name: "GARB Enoshima", cat: "bar", note: "片瀬江ノ島駅徒歩3分、テラス席から富士山も望める白木基調のダイニングバー", url: "https://www.google.com/search?q=GARB%20Enoshima%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search" },
+    { name: "PIZZERIA&DINING PICO 江ノ島店", cat: "yoshoku", note: "しらすピッツァと江ノ島地ビールが人気の海辺のピザ&ダイニング", url: "https://www.google.com/search?q=PIZZERIA%26DINING%20PICO%20%E6%B1%9F%E3%83%8E%E5%B3%B6%E5%BA%97%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search" },
+    { name: "湘南韓国料理GOKAN", cat: "washoku", note: "江ノ島産釜揚げしらすや湘南野菜のチヂミが楽しめる韓国料理店", url: "https://www.google.com/search?q=%E6%B9%98%E5%8D%97%E9%9F%93%E5%9B%BD%E6%96%99%E7%90%86GOKAN%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search" },
+    { name: "海花亭", cat: "seafood", note: "片瀬海岸エリアの海鮮定食店、アジのたたきや海老フライ定食が人気", url: "https://www.google.com/search?q=%E6%B5%B7%E8%8A%B1%E4%BA%AD%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search", lat: 35.299025, lng: 139.4794647 },
+    { name: "干物 鈴傳", cat: "washoku", note: "腰越の干物店が営む定食店、七輪で焼く干物定食が名物", url: "https://www.google.com/search?q=%E5%B9%B2%E7%89%A9%20%E9%88%B4%E5%82%B3%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search" },
+    { name: "鎌倉 松原庵 青", cat: "washoku", note: "腰越にある蕎麦の名店の系列、前菜と天ぷら付きの蕎麦ランチコースが評判", url: "https://www.google.com/search?q=%E9%8E%8C%E5%80%89%20%E6%9D%BE%E5%8E%9F%E5%BA%B5%20%E9%9D%92%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search" },
+    { name: "aniko enoshima", cat: "yoshoku", note: "2025年開業、イタリア・マルケ州郷土料理をカジュアルに楽しめるレストラン", url: "https://www.google.com/search?q=aniko%20enoshima%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search" },
+    { name: "ビストロ Fou", cat: "yoshoku", note: "2025年開業の腰越のビストロ、週替わりランチコースが人気", url: "https://www.google.com/search?q=%E3%83%93%E3%82%B9%E3%83%88%E3%83%AD%20Fou%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search" },
+    { name: "江の島カフェ", cat: "cafe", note: "江の島アイランドスパ1階、しらす唐揚げバーガーや江の島珈琲ソフトが名物のカフェ", url: "https://www.google.com/search?q=%E6%B1%9F%E3%81%AE%E5%B3%B6%E3%82%AB%E3%83%95%E3%82%A7%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search" },
+    { name: "カフェーマル", cat: "cafe", note: "江の島の落ち着いた隠れ家カフェ、看板猫に会えることもある一人利用向けの穴場", url: "https://www.google.com/search?q=%E3%82%AB%E3%83%95%E3%82%A7%E3%83%BC%E3%83%9E%E3%83%AB%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search", lat: 35.3012896, lng: 139.4821159 },
+    { name: "Sorano Bakehouse", cat: "sweets", note: "江ノ電の駅近く、アイスサンドが人気の隠れ家的ベイクハウス", url: "https://www.google.com/search?q=Sorano%20Bakehouse%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search" },
+    { name: "IZA江ノ島ゲストハウス&バー", cat: "lodging", note: "江ノ電江ノ島駅徒歩3分、素泊まり3,500円からのバー併設ゲストハウス", url: "http://izaiza.jp/enoshima/index.html", urlType: "official" },
+    { name: "紀州鉄道片瀬江ノ島ホテル", cat: "lodging", note: "片瀬江ノ島駅近くの老舗ホテル、江ノ島観光の拠点として便利な宿泊施設", url: "https://www.fujisawa-kanko.jp/stay/27.html", urlType: "official" },
+    { name: "スーパーホテル湘南・藤沢駅南口", cat: "lodging", note: "藤沢駅徒歩2分、天然温泉と無料朝食バイキング付きのビジネスホテル", url: "https://www.superhotel.co.jp/s_hotels/fujisawa/", urlType: "official" },
+    { name: "龍恋の鐘", cat: "sight", note: "江の島「恋人の丘」にある鐘、天女と五頭龍伝説にちなむカップルに人気のスポット", url: "https://www.fujisawa-kanko.jp/spot/enoshima/15.html", urlType: "official", lat: 35.2987404, lng: 139.47682 },
+    { name: "江の島弁天橋", cat: "sight", note: "江の島本土をつなぐ橋、海と富士山を望める散策路", url: "https://www.google.com/search?q=%E6%B1%9F%E3%81%AE%E5%B3%B6%E5%BC%81%E5%A4%A9%E6%A9%8B%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search", lat: 35.3044597, lng: 139.4821935 },
+    { name: "江の島弁財天仲見世通り", cat: "souvenir", note: "江島神社参道の商店街、しらすグルメやたこせんべいの食べ歩きが楽しい", url: "https://www.fujisawa-kanko.jp/spot/enoshima/01.html", urlType: "official", lat: 35.3014386, lng: 139.4807015 },
+    { name: "西浦漁港", cat: "sight", note: "地元でも知られる裏スポット、静かな渚から富士山と小田原方面を望める穴場", url: "https://www.google.com/search?q=%E8%A5%BF%E6%B5%A6%E6%BC%81%E6%B8%AF%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search" },
+    { name: "片瀬東浜海水浴場", cat: "sight", note: "片瀬海岸のビーチ、夏は海水浴客で賑わう江ノ島最寄りの砂浜", url: "https://www.google.com/search?q=%E7%89%87%E7%80%AC%E6%9D%B1%E6%B5%9C%E6%B5%B7%E6%B0%B4%E6%B5%B4%E5%A0%B4%20%E6%B1%9F%E3%83%8E%E5%B3%B6", urlType: "search" },
   ];
 
   let activeCat = "all";
@@ -679,7 +753,8 @@
 
   function renderFilterBar() {
     const bar = document.getElementById("filterBar");
-    const catsUsed = [...new Set(SPOTS.map(s => s.cat))];
+    const present = new Set(SPOTS.map(s => s.cat));
+    const catsUsed = CATEGORY_ORDER.filter(c => present.has(c));
     let html = `<button class="chip active" data-cat="all">すべて</button>`;
     catsUsed.forEach(c => {
       const meta = CATS[c];
@@ -692,6 +767,7 @@
         bar.querySelectorAll(".chip").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         applyFilter();
+        fitMapToCategory();
       });
     });
   }
@@ -720,7 +796,11 @@
     }).join("");
 
     grid.querySelectorAll(".card").forEach(card => {
-      card.addEventListener("click", () => selectSpot(parseInt(card.dataset.index), true));
+      card.addEventListener("click", () => {
+        const idx = parseInt(card.dataset.index);
+        if (selectedIndex === idx) deselectSpot();
+        else selectSpot(idx, true);
+      });
     });
   }
 
@@ -766,6 +846,30 @@
     }
   }
 
+  function deselectSpot() {
+    selectedIndex = null;
+    document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
+    Object.values(markers).forEach(marker => {
+      const pinEl = marker.getElement()?.querySelector(".leaflet-pin");
+      if (pinEl) pinEl.classList.remove("selected");
+      marker.closePopup();
+    });
+  }
+
+  function fitMapToCategory() {
+    if (!map) return;
+    const pts = SPOTS
+      .map((s, i) => ({ s, i }))
+      .filter(({ s }) => s.lat && (activeCat === "all" || s.cat === activeCat))
+      .map(({ s }) => [s.lat, s.lng]);
+    if (pts.length === 0) return;
+    if (pts.length === 1) {
+      map.flyTo(pts[0], 16, { duration: 0.7 });
+    } else {
+      map.flyToBounds(L.latLngBounds(pts), { padding: [32, 32], duration: 0.7, maxZoom: 16 });
+    }
+  }
+
   function renderMap() {
     map = L.map("leafletMap", { scrollWheelZoom: true }).setView([35.315, 139.52], 13);
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
@@ -786,6 +890,7 @@
       const marker = L.marker([s.lat, s.lng], { icon }).addTo(map)
         .bindPopup(`<b>${s.name}</b><br>${meta.label}${s.tag ? " ・ " + s.tag : ""}`);
       marker.on("click", () => {
+        if (selectedIndex === i) { deselectSpot(); return; }
         selectSpot(i, false);
         const card = document.querySelector(`.card[data-index="${i}"]`);
         if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
