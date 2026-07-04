@@ -51,9 +51,9 @@
     border-bottom: 1px solid var(--line);
   }
   .topbar .brand {
-    font-weight: 900;
-    font-size: 16px;
-    letter-spacing: -0.01em;
+    display: block;
+    height: 22px;
+    width: auto;
   }
   .topbar a.mini-cta {
     font-size: 11px;
@@ -88,21 +88,9 @@
     50% { transform: translateY(10px) scale(1.04); }
   }
   .hero > * { position: relative; z-index: 1; }
-  .hero .eyebrow {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    color: #fff;
-    background: var(--pink);
-    padding: 5px 12px;
-    border-radius: 999px;
-    margin-bottom: 16px;
-    animation: fadeUp 0.6s ease both;
-  }
   .hero .logo {
-    max-width: 340px;
-    width: 78%;
+    max-width: 255px;
+    width: 58.5%;
     height: auto;
     margin: 0 auto;
     display: block;
@@ -165,13 +153,13 @@
 
   /* ===== FILTER BAR ===== */
   .filter-bar {
-    padding: 10px 16px 8px;
+    padding: 8px 16px 6px;
   }
   .filter-inner {
     max-width: 1100px;
     margin: 0 auto;
     display: flex;
-    gap: 7px;
+    gap: 5px;
     flex-wrap: wrap;
   }
   .chip {
@@ -179,9 +167,9 @@
     border: none;
     background: #fff;
     color: var(--ink);
-    font-size: 12px;
+    font-size: 10.5px;
     font-weight: 700;
-    padding: 7px 13px;
+    padding: 5px 10px;
     border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
@@ -217,7 +205,7 @@
     color: var(--muted);
   }
   #leafletMap {
-    height: 190px;
+    height: 150px;
     border-radius: 16px;
     border: 3px solid #fff;
     box-shadow: 0 8px 24px rgba(35,32,66,0.12);
@@ -494,9 +482,9 @@
   /* ===== DESKTOP ===== */
   @media (min-width: 640px) {
     .hero { padding: 48px 24px 36px; }
-    .hero .logo { max-width: 440px; }
+    .hero .logo { max-width: 330px; }
     .hero h2.sub { font-size: 20px; }
-    #leafletMap { height: 260px; }
+    #leafletMap { height: 220px; }
     .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   }
   @media (min-width: 960px) {
@@ -508,15 +496,14 @@
 <body>
 
   <div class="topbar">
-    <div class="brand">Vacances</div>
+    <img class="brand" src="vacances_logo_black.png" alt="Vacances">
     <a class="mini-cta" href="#event">イベント情報 →</a>
   </div>
 
   <section class="hero">
-    <span class="eyebrow">VACANCES OFFICIAL GUIDE</span>
     <img class="logo" src="vacances_logo_black.png" alt="Vacances">
     <h2 class="sub">江ノ島 & 鎌倉とっておきスポット</h2>
-    <p class="lead">観光・グルメ・宿泊まで、地元で愛されるスポットを155件厳選。気になるお店をタップすると、地図でも場所がわかります。</p>
+    <p class="lead">「バカンス」をするように、地元で愛されるスポットをイベント前後に観光・グルメ・宿泊までたっぷり楽しむ155件厳選。気になるお店をタップすると、地図でも場所がわかります。</p>
     <div class="search-wrap">
       <span class="icon">🔍</span>
       <input id="searchInput" type="text" placeholder="お店・スポット名で検索">
