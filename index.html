@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vacances | 江ノ島 & 鎌倉とっておきスポット</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  :root {
+    --ink: #232042;
+    --paper: #faf5ec;
+    --card-bg: #ffffff;
+    --muted: #78738c;
+    --line: #ece5d8;
+
+    --peach: #f7ddc9;
+    --yellow: #ffd76a;
+
+    --pink: #ff4f8b;
+    --orange: #ff9843;
+    --gold: #e0a419;
+    --teal: #00a693;
+    --blue: #4a7bff;
+    --purple: #9b6bf0;
+    --brown: #a5714f;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Noto Sans JP", "Helvetica Neue", Arial, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  a { color: inherit; }
+  img { max-width: 100%; }
+  button { font-family: inherit; }
+
+  /* ===== TOP BAR ===== */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(250,245,236,0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar .brand {
+    font-weight: 900;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+  }
+  .topbar a.mini-cta {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    position: relative;
+    padding: 36px 16px 28px;
+    text-align: center;
+    overflow: hidden;
+    background: var(--peach);
+  }
+  .hero .eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: #fff;
+    background: var(--pink);
+    padding: 5px 12px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: 52px;
+    margin: 0;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-style: italic;
+  }
+  .hero h2.sub {
+    font-size: 17px;
+    margin: 8px 0 12px;
+    font-weight: 800;
+  }
+  .hero p.lead {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 420px;
+    margin: 0 auto 20px;
+  }
+
+  .search-wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: 14px 18px 14px 42px;
+    border-radius: 999px;
+    border: none;
+    font-size: 15px;
+    background: #fff;
+    outline: none;
+    font-family: inherit;
+    box-shadow: 0 6px 16px rgba(35,32,66,0.1);
+  }
+  .search-wrap .icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px;
+    opacity: 0.5;
+  }
+
+  /* ===== FILTER BAR ===== */
+  .filter-bar {
+    position: sticky;
+    top: 45px;
+    z-index: 20;
+    background: rgba(250,245,236,0.95);
+    backdrop-filter: blur(8px);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .filter-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    flex: 0 0 auto;
+    border: none;
+    background: #fff;
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 7px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .chip .ico { margin-right: 4px; }
+  .chip.active {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  /* ===== MAP ===== */
+  .map-section {
+    padding: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .map-section .map-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .map-section h2 {
+    font-size: 15px;
+    margin: 0;
+    font-weight: 900;
+  }
+  .map-section .map-hint {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  #leafletMap {
+    height: 320px;
+    border-radius: 18px;
+    border: 3px solid #fff;
+    box-shadow: 0 8px 24px rgba(35,32,66,0.12);
+    overflow: hidden;
+  }
+  .leaflet-pin {
+    width: 24px;
+    height: 24px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease;
+  }
+  .leaflet-pin span { transform: rotate(45deg); font-size: 11px; }
+  .leaflet-pin.selected {
+    transform: rotate(-45deg) scale(1.35);
+    box-shadow: 0 0 0 4px rgba(35,32,66,0.25), 0 2px 6px rgba(0,0,0,0.35);
+  }
+  .leaflet-popup-content-wrapper { border-radius: 12px; }
+  .leaflet-popup-content { font-size: 12.5px; margin: 10px 12px; }
+  .leaflet-popup-content b { font-size: 13.5px; }
+
+  .result-count {
+    max-width: 1100px;
+    margin: 4px auto 0;
+    padding: 0 16px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .result-count b { color: var(--ink); }
+
+  /* ===== GRID ===== */
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 10px 16px 40px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 2px solid var(--line);
+    border-left: 5px solid var(--cat-color, var(--purple));
+    position: relative;
+    padding: 14px 16px 14px;
+    cursor: pointer;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  }
+  .card.selected {
+    border-color: var(--ink);
+    border-left-color: var(--cat-color, var(--purple));
+    box-shadow: 0 6px 18px rgba(35,32,66,0.14);
+  }
+  .card .selected-badge {
+    display: none;
+    position: absolute;
+    top: -9px;
+    right: 12px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .card.selected .selected-badge { display: inline-block; }
+  .card .row1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .card h3 {
+    font-size: 15.5px;
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .card .catlabel {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--cat-color, var(--purple));
+    background: color-mix(in srgb, var(--cat-color, var(--purple)) 14%, #fff);
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .card .meta {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .card .note {
+    font-size: 13px;
+    color: #4c4760;
+    line-height: 1.65;
+  }
+  .card .no-pin {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .card .detail-btn {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 9px 16px;
+    border-radius: 999px;
+    text-decoration: none;
+    background: var(--ink);
+    color: #fff;
+  }
+  .card .detail-btn.search { background: #fff; color: var(--ink); border: 2px solid var(--line); }
+  .card.venue { background: linear-gradient(135deg, var(--peach), #ffffff); }
+  .card.hidden { display: none; }
+
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--muted);
+    font-size: 14px;
+    display: none;
+  }
+  .empty-state.show { display: block; }
+
+  /* ===== EVENT FOOTER (compact) ===== */
+  .event-footer {
+    max-width: 720px;
+    margin: 40px auto 0;
+    padding: 0 16px 50px;
+  }
+  .event-card {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 18px;
+    padding: 16px;
+  }
+  .event-card img {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+  .event-card .info { flex: 1; min-width: 160px; }
+  .event-card .info .tag {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: var(--yellow);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .event-card .info h4 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 900;
+  }
+  .event-card .info p {
+    margin: 0;
+    font-size: 11.5px;
+    opacity: 0.75;
+  }
+  .event-card .cta-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  .event-card .cta {
+    flex: 1;
+    text-align: center;
+    background: #fff;
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 800;
+    padding: 10px 14px;
+    border-radius: 999px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .event-card .cta.insta {
+    background: transparent;
+    color: #fff;
+    border: 2px solid rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .event-card .cta.insta svg { flex-shrink: 0; }
+  .credit {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 16px;
+  }
+
+  /* ===== BACK TO TOP ===== */
+  .back-to-top {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    font-size: 18px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(35,32,66,0.3);
+    cursor: pointer;
+    z-index: 40;
+  }
+  .back-to-top.show { display: flex; }
+
+  /* ===== LOAD MORE ===== */
+  .load-more-wrap {
+    text-align: center;
+    margin-top: 20px;
+  }
+  .load-more-btn {
+    border: 2px solid var(--ink);
+    background: #fff;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 800;
+    padding: 12px 28px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .load-more-btn:active { background: var(--ink); color: #fff; }
+
+  /* ===== DESKTOP ===== */
+  @media (min-width: 640px) {
+    .hero { padding: 56px 24px 36px; }
+    .hero h1 { font-size: 68px; }
+    .hero h2.sub { font-size: 20px; }
+    #leafletMap { height: 420px; }
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  }
+  @media (min-width: 960px) {
+    .grid { grid-template-columns: repeat(3, 1fr); }
+    #leafletMap { height: 480px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">Vacances</div>
+    <a class="mini-cta" href="#event">イベント情報 →</a>
+  </div>
+
+  <section class="hero">
+    <span class="eyebrow">VACANCES OFFICIAL GUIDE</span>
+    <h1>Vacances</h1>
+    <h2 class="sub">江ノ島 & 鎌倉とっておきスポット</h2>
+    <p class="lead">観光・グルメ・宿泊まで、地元で愛されるスポットを132件厳選。気になるお店をタップすると、地図でも場所がわかります。</p>
+    <div class="search-wrap">
+      <span class="icon">🔍</span>
+      <input id="searchInput" type="text" placeholder="お店・スポット名で検索">
+    </div>
+  </section>
+
+  <div class="filter-bar">
+    <div class="filter-inner" id="filterBar"></div>
+  </div>
+
+  <div class="map-section">
+    <div class="map-head">
+      <h2>📍 エリアマップ</h2>
+      <span class="map-hint">お店をタップで地図と連動</span>
+    </div>
+    <div id="leafletMap"></div>
+  </div>
+
+  <div class="result-count"><b id="resultNum">0</b> 件表示中</div>
+
+  <div class="wrap">
+    <div class="grid" id="grid"></div>
+    <div class="empty-state" id="emptyState">該当するスポットが見つかりませんでした 🥲</div>
+    <div class="load-more-wrap" id="loadMoreWrap">
+      <button class="load-more-btn" id="loadMoreBtn">もっと見る</button>
+    </div>
+  </div>
+
+  <button class="back-to-top" id="backToTop" aria-label="トップに戻る">↑</button>
+
+  <div class="event-footer" id="event">
+    <div class="event-card">
+      <img src="vacances_vol5.jpg" alt="Vacances vol.5">
+      <div class="info">
+        <span class="tag">MUSIC EVENT</span>
+        <h4>Vacances vol.5 — 2026.9.12 (SAT)</h4>
+        <p>江ノ島OPPA-LA / OPEN・START 15:00 / ADV ¥3,500・DOOR ¥4,000</p>
+      </div>
+      <div class="cta-row">
+        <a class="cta" href="https://tinyurl.com/vacances0912" target="_blank" rel="noopener">🎫 チケット</a>
+        <a class="cta insta" href="https://www.instagram.com/vacances_party/" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="6" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="2"/><circle cx="17.2" cy="6.8" r="1.2" fill="currentColor"/></svg>
+          Instagram
+        </a>
+      </div>
+    </div>
+    <div class="credit">主催 / 企画 / 制作：has × tadanoshibata × SHOGO　#バカンスオッパーラ</div>
+  </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const CATS = {
+    venue:   { label: "会場",          hex: "#ff9843", icon: "🎪" },
+    sight:   { label: "観光・寺社",     hex: "#9b6bf0", icon: "⛩️" },
+    onsen:   { label: "温泉・スパ",     hex: "#00a693", icon: "♨️" },
+    cafe:    { label: "カフェ",         hex: "#ff9843", icon: "☕" },
+    ramen:   { label: "ラーメン",       hex: "#ff4f8b", icon: "🍜" },
+    washoku: { label: "和食",           hex: "#00a693", icon: "🍣" },
+    yoshoku: { label: "洋食・イタリアン", hex: "#ff4f8b", icon: "🍝" },
+    chuka:   { label: "中華・アジアン", hex: "#e0a419", icon: "🥟" },
+    sweets:  { label: "スイーツ・パン", hex: "#ff4f8b", icon: "🍰" },
+    seafood: { label: "海鮮",           hex: "#4a7bff", icon: "🦞" },
+    bar:     { label: "バー・居酒屋",   hex: "#9b6bf0", icon: "🍺" },
+    souvenir:{ label: "お土産・ショップ", hex: "#e0a419", icon: "🛍️" },
+    other:   { label: "その他グルメ",   hex: "#4a7bff", icon: "🍽️" },
+    lodging: { label: "宿泊",           hex: "#a5714f", icon: "🏨" },
+  };
+
+  const SPOTS = [
+    { name: "OPPA-LA", cat: "venue", price: "お手頃", tag: "カレー", note: "Vacancesの会場となるカレーダイナー。江ノ島を望むロケーションで、スパイス香る自家製カレーとお酒を片手に、パーティー前後もゆったり過ごせる。", url: "https://oppa-la.net/", urlType: "official", lat: 35.3038, lng: 139.4825 },
+    { name: "鎌倉文華館 鶴岡ミュージアム", cat: "sight", tag: "博物館", note: "鶴岡八幡宮の境内に佇む洋館建築のミュージアム。鎌倉ゆかりの文学者の資料や近代アートの企画展を常時開催しており、参拝の合間に立ち寄れる静かな文化スポット。", url: "https://tsurugaokamuseum.jp/", urlType: "official", lat: 35.3247382, lng: 139.5549681 },
+    { name: "カプリチョーザ 江ノ島店", cat: "yoshoku", price: "¥1,000〜2,000", tag: "イタリア料理", note: "大皿でシェアする本格イタリアンが人気の全国チェーン。江ノ島店は観光帰りのグループにも使いやすく、トマトソースのパスタやピザをボリュームたっぷりに楽しめる。", url: "https://enoshima.capricciosa.com/", urlType: "official" },
+    { name: "bills 七里ヶ浜", cat: "cafe", price: "¥2,000〜3,000", tag: "レストラン", note: "オーストラリア発、\"世界一の朝食\"と称されるオーシャンビューカフェ。ふわふわのリコッタパンケーキが看板メニューで、七里ヶ浜の海を眺めながらゆったりブランチが楽しめる。", url: "https://www.billsjapan.com/jp", urlType: "official", lat: 35.3057, lng: 139.5157 },
+    { name: "DIEGO BY THE RIVER", cat: "yoshoku", tag: "臨時休業", note: "境川沿いのテラス席が気持ちいい大人向けダイニングバー。夕暮れ時は川面に映る灯りを眺めながら、お酒と料理をゆっくり楽しめる隠れた一軒。", url: "https://www.bytheriver.jp/", urlType: "official", lat: 35.3097268, lng: 139.4858836 },
+    { name: "神奈川県立近代美術館 鎌倉別館", cat: "sight", tag: "現代美術館", note: "鎌倉の緑に囲まれた静かな現代アート鑑賞スポット。企画展ごとに表情を変える展示空間で、鑑賞後は併設のカフェやショップも楽しめる。", url: "https://www.moma.pref.kanagawa.jp/annex/", urlType: "official", lat: 35.3275149, lng: 139.5557522 },
+    { name: "Rans kamakura", cat: "yoshoku", price: "¥2,000〜6,000", tag: "イタリア料理", note: "鎌倉野菜をふんだんに使った創作イタリアンが評判の一軒家レストラン。落ち着いた店内で、地元食材を活かしたコースをゆったり味わえる。", url: "http://www.rans.jp/kamakura/", urlType: "official" },
+    { name: "鎌倉高校前駅", cat: "sight", tag: "駅", note: "「スラムダンク」のアニメOPに登場する踏切として世界中のファンが訪れる無人駅。海を背景に江ノ電が走り抜ける瞬間は絶好の撮影スポット。", url: "https://www.google.com/search?q=%E9%8E%8C%E5%80%89%E9%AB%98%E6%A0%A1%E5%89%8D%E9%A7%85%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search", lat: 35.3068, lng: 139.5024 },
+    { name: "稲村ヶ崎温泉", cat: "onsen", tag: "日帰り温泉", note: "夕日と富士山を一望できる絶景の露天風呂。サーフィン帰りにも立ち寄りやすく、潮風に吹かれながら海を眺める湯浴みは格別。", url: "https://www.inamuragasaki-onsen.jp/", urlType: "official", lat: 35.3096, lng: 139.5192 },
+    { name: "江の島シーキャンドル", cat: "sight", tag: "展望台", note: "湘南のシンボルタワー。展望フロアからは相模湾から富士山までのパノラマが広がり、夜はイルミネーションが灯る幻想的な夜景スポットに。", url: "https://enoshima-seacandle.com/", urlType: "official", lat: 35.2983, lng: 139.4805 },
+    { name: "鎌倉大仏殿高徳院", cat: "sight", tag: "仏教寺院", note: "鎌倉のシンボルである国宝の大仏を間近で拝観できる古刹。像内拝観も可能で、屋外に鎮座する大仏の迫力は写真だけでは伝わらない見応え。", url: "https://www.kotoku-in.jp/", urlType: "official", lat: 35.3169, lng: 139.5359 },
+    { name: "AWkitchen GARDEN 鎌倉店", cat: "other", price: "¥2,000〜3,000", tag: "レストラン", note: "緑あふれるガーデンテラスが自慢のビュッフェレストラン。開放的な空間で野菜料理を中心にしたメニューを好きなだけ楽しめ、女子会やファミリーにも人気。", url: "https://aw-kitchen.com/1650/", urlType: "official" },
+    { name: "段葛", cat: "sight", tag: "史跡", note: "鶴岡八幡宮へと続く桜並木の参道。一段高く整備された歩道は源頼朝の時代から続く由緒ある景観で、春は花見客で賑わう鎌倉らしい散策路。", url: "https://www.google.com/search?q=%E6%AE%B5%E8%91%9B%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search", lat: 35.3216518, lng: 139.5537102 },
+    { name: "Pacific DRIVE-IN", cat: "cafe", price: "¥1,000〜2,000", tag: "ハワイ料理", note: "ヤシの木とサーフボードが並ぶ西海岸風ドライブイン。パンケーキやアサイーボウルなど写真映えするメニューが揃い、サーファーや観光客で朝から賑わう。", url: "http://pacificdrivein.com/", urlType: "official", lat: 35.3044561, lng: 139.5134803 },
+    { name: "花みずき", cat: "ramen", price: "¥1,000〜2,000", tag: "ラーメン", note: "出演者を始め、イベント終わりのお客さんも大集合する行きつけラーメン店。飲み足りない人はお酒も飲めて、パーティー後の締めにもぴったりの一杯が味わえる。", url: "https://www.google.com/search?q=%E8%8A%B1%E3%81%BF%E3%81%9A%E3%81%8D%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search" },
+    { name: "鶴岡八幡宮", cat: "sight", tag: "神社", note: "鎌倉幕府ゆかりの大社で、鎌倉観光の中心的存在。初詣や結婚式でも賑わい、境内の舞殿や本宮までの石段からは鎌倉の街並みを見渡せる。", url: "https://www.hachimangu.or.jp/", urlType: "official", lat: 35.3258, lng: 139.5563 },
+    { name: "江の島アイランドスパ", cat: "onsen", tag: "デイスパ", note: "海を見ながら入れる展望温浴施設。観光で歩き疲れた足を休めるのにちょうどよく、露天エリアからは江の島の絶景を眺めながらリラックスできる。", url: "https://www.enospa.jp/", urlType: "official", lat: 35.3020198, lng: 139.480575 },
+    { name: "湘南小吃", cat: "chuka", price: "¥1,000〜2,000", tag: "台湾料理", note: "台湾家庭料理を気軽に楽しめる小皿料理の名店。魯肉飯や小籠包など定番メニューが揃い、一人でもふらっと立ち寄りやすい雰囲気。", url: "https://tabelog.com/en/kanagawa/A1404/A140404/14000000/", urlType: "official", lat: 35.3401962, lng: 139.4388771 },
+    { name: "湘南火鍋房", cat: "chuka", price: "¥2,000〜3,000", tag: "中華料理", note: "本格薬膳火鍋が楽しめる藤沢の人気中華店。数種類のスープから選べる鍋は身体の芯から温まると評判で、寒い季節や女子会にも重宝する。", url: "https://shonanhinabebou.owst.jp/", urlType: "official" },
+    { name: "新江ノ島水族館", cat: "sight", tag: "水族館", note: "クラゲの展示で知られる相模湾の水族館。イルカショーや大水槽での回遊魚など見どころが多く、家族連れからカップルまで一日中楽しめる定番スポット。", url: "https://www.enosui.com/", urlType: "official", lat: 35.3057, lng: 139.4794 },
+    { name: "Good Mellows", cat: "other", price: "¥1,000〜2,000", tag: "ハンバーガー", note: "厚みのあるパティが評判の本格グルメバーガー店。ジューシーな肉汁と香ばしいバンズの組み合わせが人気で、テイクアウトしてビーチで食べるのもおすすめ。", url: "http://goodmellows.jp/", urlType: "official", lat: 35.3078736, lng: 139.5335013 },
+    { name: "うずとかみなり", cat: "ramen", price: "¥1,000〜2,000", tag: "ラーメン", note: "濃厚な鶏白湯スープが評判の行列ラーメン店。開店前から並ぶ常連も多く、とろりとしたスープと自家製麺の相性は一度食べたらやみつきになる。", url: "https://uzurai.stores.jp/", urlType: "official" },
+    { name: "アカリダイニング", cat: "other", price: "¥1,000〜2,000", tag: "レストラン", note: "隠れ家的な雰囲気で楽しめる創作ダイニング。落ち着いた照明の店内はデートや女子会にも使いやすく、季節の食材を活かした料理が並ぶ。", url: "https://www.google.com/search?q=%E3%82%A2%E3%82%AB%E3%83%AA%E3%83%80%E3%82%A4%E3%83%8B%E3%83%B3%E3%82%B0%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search" },
+    { name: "ビストロ オランジュ", cat: "yoshoku", price: "¥2,000〜7,000", tag: "フランス料理", note: "本格フレンチを気軽に楽しめる小さなビストロ。シェフの目が届く規模だからこその丁寧な一皿が魅力で、記念日のディナーにも選ばれる一軒。", url: "https://bistrotorange.jp/", urlType: "official" },
+    { name: "薬膳中華 蛙吽WAON 湘南藤沢本店", cat: "chuka", price: "¥1,000〜2,000", tag: "レストラン", note: "薬膳スープが自慢の体に優しい中華料理店。漢方の考えを取り入れたメニューが揃い、健康志向の女性客からも支持されている。", url: "https://www.instagram.com/waon_fujisawa/", urlType: "official" },
+    { name: "中華 大新 藤沢店", cat: "chuka", price: "¥1,000〜2,000", tag: "中華料理", note: "町中華の定番メニューが揃う地元で人気の一軒。餃子やチャーハンなど安定の美味しさで、家族連れやサラリーマンの日常使いに親しまれている。", url: "https://www.google.com/search?q=%E4%B8%AD%E8%8F%AF%20%E5%A4%A7%E6%96%B0%20%E8%97%A4%E6%B2%A2%E5%BA%97%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search" },
+    { name: "中華 千里飯店", cat: "chuka", price: "¥1,000〜2,000", tag: "中華料理", note: "昔ながらの味わいが人気の老舗中華食堂。長年地元に愛されてきた変わらない味は、どこか懐かしい気持ちにさせてくれる。", url: "https://gctv516.gorp.jp/", urlType: "official" },
+    { name: "龍口寺", cat: "sight", tag: "仏教寺院", note: "江ノ電の踏切越しに見える五重塔が印象的な古刹。日蓮聖人の法難の地としても知られ、境内には迫力ある山門と静かな時間が流れる。", url: "https://ryuukoji.com/", urlType: "official", lat: 35.3033, lng: 139.4869 },
+    { name: "PEPOWN", cat: "bar", tag: "ビール専門店", note: "世界のクラフトビールが揃う藤沢のビア専門店。日替わりのタップから好みの一杯を選べ、ビール好きが集うカジュアルな雰囲気が魅力。", url: "https://tabelog.com/en/kanagawa/A1404/A140406/14094512/", urlType: "official" },
+    { name: "Gold'nBuB", cat: "bar", price: "¥3,000〜4,000", tag: "レストラン", note: "落ち着いた雰囲気で食事とお酒が楽しめるダイニングバー。大人な内装は特別な夜にもぴったりで、料理とドリンクのペアリングも楽しめる。", url: "https://www.instagram.com/goldn.bub/", urlType: "official" },
+    { name: "MAHALO 江ノ島店", cat: "cafe", price: "¥1,000〜2,000", tag: "レストラン", note: "ハワイアン気分を味わえるロコモコが人気の店。ボリューム満点の一皿は観光で歩いた後の腹ごしらえにちょうどよく、南国気分を盛り上げてくれる。", url: "https://mahalo-enoshimaten.foodre.jp/", urlType: "official" },
+    { name: "カフェ&バー ヘミングウェイ", cat: "bar", price: "¥1,000〜4,000", tag: "レストラン", note: "アメリカンな内装でカフェからバータイムまで使える多目的な一軒。昼はランチ、夜はお酒とゆったり過ごせる、使い勝手のいい店。", url: "https://hemingway.cafe/", urlType: "official" },
+    { name: "TORA trattoria", cat: "yoshoku", price: "¥2,000〜3,000", tag: "イタリア料理", note: "少人数制の隠れ家イタリアン。予約必至の人気店で、シェフのこだわりが詰まった一皿ずつを落ち着いた空間でじっくり味わえる。", url: "https://www.google.com/search?q=TORA%20trattoria%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search" },
+    { name: "Kalae-Ribs kitchen", cat: "other", price: "¥2,000〜3,000", tag: "レストラン", note: "スペアリブが看板の南国リゾート風レストラン。じっくり煮込まれた骨付き肉はボリューム満点で、トロピカルな内装も気分を上げてくれる。", url: "https://kalae-ribskitchen.wixsite.com/kalae/", urlType: "official" },
+    { name: "クラリタ ダ マリッティマ", cat: "yoshoku", price: "¥3,000〜8,000", tag: "イタリア料理", note: "本格シーフードイタリアンが楽しめる特別な一軒。新鮮な魚介をふんだんに使ったパスタは記念日のディナーにもふさわしい上質な味わい。", url: "https://www.clarita-da-marittima.com/", urlType: "official" },
+    { name: "レッドロブスター 江ノ島店", cat: "seafood", price: "¥2,000〜8,000", tag: "魚介料理", note: "ロブスターやシーフードが豊富なアメリカン海鮮チェーン。豪快な盛り付けの魚介料理は特別な日の食事にもぴったりで、家族での利用にも人気。", url: "https://redlobster-enoshima.foodre.jp/", urlType: "official", lat: 35.3113766, lng: 139.4791604 },
+    { name: "iL CHIANTI BEACHE", cat: "yoshoku", price: "¥2,000〜3,000", tag: "イタリア料理", note: "海を見ながら本格イタリアンが楽しめるビーチサイド店。開放的なテラス席からは湘南の海が一望でき、リゾート気分でパスタやピザを味わえる。", url: "https://www.yyjam.com/beache", urlType: "official" },
+    { name: "べたなぎ", cat: "other", price: "¥1,000〜2,000", tag: "レストラン", note: "地元で愛される定食とお酒が楽しめる大衆食堂。飾らない美味しさとリーズナブルな価格で、ふらっと立ち寄れる地元の味方的存在。", url: "https://www.google.com/search?q=%E3%81%B9%E3%81%9F%E3%81%AA%E3%81%8E%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search", lat: 35.3090466, lng: 139.4861783 },
+    { name: "江の島遊覧船べんてん丸 岩屋乗り場", cat: "sight", tag: "フェリーサービス", note: "江の島岩屋まで運航する遊覧船の乗り場。歩くと距離のある岩屋エリアまで船でショートカットでき、海上から江の島の断崖を眺められる。", url: "https://www.fujisawa-kanko.jp/access/bentenmaru.html", urlType: "official" },
+    { name: "長谷寺", cat: "sight", price: "¥300〜500", note: "大仏と並ぶ鎌倉を代表する古刹。初夏には数十種のあじさいが境内を彩り、見晴台からは由比ヶ浜の海を一望できる眺望も自慢。", url: "https://www.hasedera.jp/", urlType: "official", lat: 35.3122, lng: 139.5347 },
+    { name: "銭洗弁財天宇賀福神社", cat: "sight", price: "無料", note: "お金を洗うと増えるという言い伝えで知られる金運パワースポット。洞窟をくぐった先にある湧水でお金を清める参拝作法が人気を呼んでいる。", url: "https://www.google.com/search?q=%E9%8A%AD%E6%B4%97%E5%BC%81%E8%B2%A1%E5%A4%A9%E5%AE%87%E8%B3%80%E7%A6%8F%E7%A5%9E%E7%A4%BE%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search", lat: 35.325755, lng: 139.5422647 },
+    { name: "報国寺", cat: "sight", price: "¥400〜1,000", note: "竹の庭が美しい「竹寺」として知られる古刹。約2,000本の孟宗竹が生い茂る庭園は圧巻で、茶席での抹茶体験も観光客に人気。", url: "https://houkokuji.or.jp/", urlType: "official", lat: 35.3159, lng: 139.5636 },
+    { name: "明月院", cat: "sight", price: "¥500〜600", note: "あじさい寺として名高い北鎌倉の古刹。境内の丸窓「悟りの窓」越しに見る庭園の景色は、季節を問わず多くの参拝客を魅了する。", url: "https://www.google.com/search?q=%E6%98%8E%E6%9C%88%E9%99%A2%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search", lat: 35.3349131, lng: 139.5516437 },
+    { name: "建長寺", cat: "sight", price: "¥500", note: "鎌倉五山第一位に数えられる日本最古の禅寺。広大な境内には国指定重要文化財の建造物が並び、座禅体験も受け付けている。", url: "https://www.kenchoji.com/", urlType: "official", lat: 35.3327, lng: 139.5507 },
+    { name: "円覚寺", cat: "sight", price: "¥500", note: "北鎌倉駅からすぐの静寂な禅寺。四季折々の自然に包まれた庭園と国宝の舎利殿など見どころが多く、鎌倉五山の中でも屈指の名刹。", url: "https://www.engakuji.or.jp/", urlType: "official", lat: 35.3378, lng: 139.5477 },
+    { name: "佐助稲荷神社", cat: "sight", price: "無料", note: "無数の赤い鳥居が続く参道が印象的な出世開運の社。源頼朝ゆかりの神社としても知られ、山あいの静かな立地も趣がある。", url: "https://sasukeinari.jp/", urlType: "official", lat: 35.3243909, lng: 139.5392489 },
+    { name: "葛原岡神社", cat: "sight", price: "無料", note: "あじさいと縁結びのご利益で人気の神社。境内の縁結びスポットが点在し、女性の参拝客に特に人気が高い。", url: "http://www.kuzuharaoka.jp/", urlType: "official", lat: 35.3288091, lng: 139.5428744 },
+    { name: "妙本寺", cat: "sight", price: "無料", note: "静かな谷戸に佇む日蓮宗の大本山。観光客の少ない穴場として知られ、緑豊かな境内でゆっくりと時間を過ごせる。", url: "https://www.myohonji.or.jp/", urlType: "official", lat: 35.3171792, lng: 139.5572259 },
+    { name: "浄妙寺", cat: "sight", price: "¥100〜300", note: "鎌倉五山第五位に数えられる古刹。境内に隣接する石窯ガーデンテラスでは、庭園を眺めながら焼きたてパンとお茶を楽しめる。", url: "https://www.tokasan-jomyoji.com/", urlType: "official", lat: 35.3233781, lng: 139.5713235 },
+    { name: "宝戒寺", cat: "sight", price: "¥300", note: "萩の名所として知られる「萩寺」。9月には境内一面に白萩が咲き誇り、静かな佇まいの中で秋の訪れを感じられる。", url: "https://hokaiji.com/", urlType: "official", lat: 35.3221163, lng: 139.55828 },
+    { name: "極楽寺", cat: "sight", price: "無料", note: "江ノ電極楽寺駅近くの静かな真言律宗寺院。派手さはないが、映画やドラマのロケ地としても使われる趣ある佇まいが魅力。", url: "https://www.google.com/search?q=%E6%A5%B5%E6%A5%BD%E5%AF%BA%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search", lat: 35.3092118, lng: 139.5286725 },
+    { name: "成就院", cat: "sight", price: "無料", note: "由比ヶ浜を見晴らす参道が絶景の寺。かつてはあじさいの名所としても知られ、参道から望む海の景色は鎌倉屈指の眺め。", url: "http://www.jojuin.com/", urlType: "official", lat: 35.3090783, lng: 139.5312626 },
+    { name: "御霊神社", cat: "sight", price: "無料", note: "江ノ電の踏切と紫陽花の撮影地として有名な神社。線路脇を走る江ノ電と紫陽花が織りなす風景は、毎年多くの写真愛好家を惹きつける。", url: "https://www.google.com/search?q=%E5%BE%A1%E9%9C%8A%E7%A5%9E%E7%A4%BE%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search", lat: 35.3109923, lng: 139.5327888 },
+    { name: "大船観音寺", cat: "sight", price: "¥300", note: "大船駅近くにそびえる巨大な白衣観音像が印象的な寺。高さ25mの観音様は大船のランドマーク的存在で、境内からは街を見渡せる。", url: "https://oofuna-kannon.or.jp/", urlType: "official", lat: 35.3530247, lng: 139.5284041 },
+    { name: "江島神社", cat: "sight", price: "無料", note: "日本三大弁財天のひとつに数えられる、江の島参拝の中心となる神社。辺津宮・中津宮・奥津宮の3つの宮を巡る参拝ルートは江の島観光の定番。", url: "http://enoshimajinja.or.jp/", urlType: "official", lat: 35.3003396, lng: 139.4798445 },
+    { name: "江の島サムエル・コッキング苑", cat: "sight", price: "¥200〜500", note: "明治期の英国人貿易商の別荘跡地に整備された洋館庭園。四季の花々とシーキャンドルが一体となった景観は、江の島観光のハイライトのひとつ。", url: "https://enoshima-seacandle.com/", urlType: "official", lat: 35.2997358, lng: 139.4792127 },
+    { name: "稚児ヶ淵", cat: "sight", price: "無料", note: "富士山と夕日が美しい海食台地で、かながわ景勝50選にも選ばれる絶景スポット。岩場から眺める夕暮れは江の島観光のクライマックスにふさわしい。", url: "https://www.fujisawa-kanko.jp/spot/enoshima/16.html", urlType: "official", lat: 35.2991139, lng: 139.4744491 },
+    { name: "江の島岩屋", cat: "sight", price: "¥500", note: "龍神伝説が残る海食洞窟で、江の島最奥に位置するパワースポット。手燭を片手に進む洞窟内は神秘的な雰囲気に包まれている。", url: "https://www.fujisawa-kanko.jp/spot/enoshima/17.html", urlType: "official", lat: 35.2996539, lng: 139.4785839 },
+    { name: "稲村ケ崎公園", cat: "sight", price: "無料", note: "富士山と夕日の絶景で知られ、かながわ景勝50選にも選ばれた公園。芝生広場でくつろぎながら海越しの富士山を眺められる人気のビュースポット。", url: "https://www.city.kamakura.kanagawa.jp/koen/p_kaihin.html", urlType: "official" },
+    { name: "披露山公園", cat: "sight", price: "無料", note: "逗子の高台から相模湾を一望できる公園。園内の小動物園ではリスザルなども見られ、展望台からの眺望は隠れた絶景スポットとして知られる。", url: "https://www.city.zushi.kanagawa.jp/kurashi/sumai/1002174/1002178/1002179/1002181.html", urlType: "official", lat: 35.2962535, lng: 139.564401 },
+    { name: "片瀬西浜白灯台", cat: "sight", price: "無料", note: "観光客が少ない静かな穴場の灯台。地元の人が散歩コースとして利用するスポットで、混雑を避けてのんびり海を眺めたい人におすすめ。", url: "https://www.google.com/search?q=%E7%89%87%E7%80%AC%E8%A5%BF%E6%B5%9C%E7%99%BD%E7%81%AF%E5%8F%B0%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search" },
+    { name: "江の島ヨットハーバー", cat: "sight", price: "無料", note: "1964年東京五輪のヨット競技会場としても使われた施設。展望デッキからは停泊するヨットと海を一望でき、知る人ぞ知る穴場スポット。", url: "https://www.fujisawa-kanko.jp/spot/enoshima/19.html", urlType: "official", lat: 35.3006882, lng: 139.4844624 },
+    { name: "らーめんHANABI", cat: "ramen", price: "¥1,000〜1,500", note: "長谷エリアで行列必至の人気ラーメン店。自家製麺と魚介出汁を効かせたスープの組み合わせが評判で、観光の合間に立ち寄る客も多い。", url: "https://ramenhanabi.studio.site/", urlType: "official" },
+    { name: "銀座 篝 鎌倉店", cat: "ramen", price: "¥1,200〜1,800", note: "銀座発の人気店による鶏白湯SOBAが看板メニュー。上品な塩味のスープと細麺の相性が良く、行列ができる実力派の一杯。", url: "https://www.google.com/search?q=%E9%8A%80%E5%BA%A7%20%E7%AF%9D%20%E9%8E%8C%E5%80%89%E5%BA%97%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search" },
+    { name: "静雨庵", cat: "ramen", price: "¥1,000〜1,500", note: "鎌倉で評判の実力派ラーメン店。こだわりのスープと麺で地元客からも支持されており、静かな佇まいの店構えも印象的。", url: "https://www.google.com/search?q=%E9%9D%99%E9%9B%A8%E5%BA%B5%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search", lat: 35.3181831, lng: 139.5488505 },
+    { name: "ラブラヌードル", cat: "ramen", price: "¥1,000〜1,500", note: "独創的なヌードルが評判の人気店。既存のラーメンの枠にとらわれない自由な発想のメニューが揃い、新しい味との出会いを楽しめる。", url: "https://www.love-la-noodle.jp", urlType: "official" },
+    { name: "AWANOUTA", cat: "ramen", price: "¥1,000〜1,500", note: "七里ヶ浜にある泡立てスープが特徴の個性派ラーメン店。ふわふわの泡をまとったスープは見た目にもインパクトがあり、話題性も抜群。", url: "https://www.google.com/search?q=AWANOUTA%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search" },
+    { name: "鎌倉だし工房 絹と小麦", cat: "ramen", price: "¥1,000〜1,500", note: "出汁にこだわった上品なラーメンが味わえる店。素材の旨みを丁寧に引き出したスープは、ラーメン好きをも唸らせる繊細な味わい。", url: "https://www.instagram.com/kinu_komugi/", urlType: "official" },
+    { name: "らぁめん三代目OKAWARI 鎌倉店", cat: "ramen", price: "¥900〜1,300", note: "小町通り近くで人気の鶏白湯ラーメン店。観光客で賑わうエリアにありながら本格的な一杯が味わえ、食べ歩きの合間の一休みにも。", url: "https://www.okawari.online/", urlType: "official" },
+    { name: "レ・ザンジュ 鎌倉本店", cat: "sweets", price: "¥500〜1,500", note: "鎌倉土産の定番として知られる洋菓子店。焼き菓子やケーキが並び、贈り物にも自分用にも選びやすいラインナップが揃う。", url: "https://www.lesanges.co.jp/view/page/kamakura", urlType: "official" },
+    { name: "ジェラテリア・イル・ブリガンテ", cat: "sweets", price: "¥500〜1,000", note: "本格イタリアンジェラートが味わえる人気店。季節のフルーツを使ったフレーバーが豊富で、食べ歩きのお供にもぴったり。", url: "http://ilbrigantejapan.co.jp/", urlType: "official" },
+    { name: "グランディール アンサンブル", cat: "sweets", price: "¥800〜2,000", note: "由比ガ浜にあるフランス菓子店。看板商品のオペラをはじめ、本格的な焼き菓子とケーキが並び地元でも評判が高い。", url: "https://grandirensemble.stores.jp/", urlType: "official" },
+    { name: "MAISON CACAO 鎌倉小町店", cat: "sweets", price: "¥500〜1,500", note: "生チョコレート専門店として小町通りで人気。厳選したカカオを使った生チョコは滑らかな口どけで、手土産としても喜ばれる。", url: "https://maisoncacao.com/shop", urlType: "official" },
+    { name: "力餅家", cat: "sweets", price: "¥300〜800", note: "創業100年を超える老舗和菓子店。名物の権五郎力餅は昔ながらの製法で作られ、鎌倉土産の定番として長年愛されている。", url: "https://www.chikaramochiya.com/", urlType: "official", lat: 35.3099556, lng: 139.533809 },
+    { name: "たい焼き なみへい", cat: "sweets", price: "¥200〜400", note: "パリッとした薄皮が自慢の行列たい焼き店。焼きたてを頬張れば皮のパリパリ感とあんこの甘さが絶妙で、食べ歩きにぴったり。", url: "https://www.taiyaki-namihei.com/", urlType: "official" },
+    { name: "鎌倉 浪花家", cat: "sweets", price: "¥200〜500", note: "小町通りで人気のたい焼き店。羽根つきの薄皮生地は香ばしく、観光客の食べ歩きスポットとして定番の存在。", url: "https://kamakura-naniwaya.wixsite.com/taiyaki", urlType: "official" },
+    { name: "鎌倉茶々", cat: "sweets", price: "¥500〜1,200", note: "静岡産の抹茶を使った抹茶っ茶ジェラートが看板メニュー。濃厚な抹茶の風味とほろ苦さが人気で、和スイーツ好きにおすすめの一軒。", url: "https://kamakura-chacha.com/", urlType: "official", lat: 35.3228236, lng: 139.5530568 },
+    { name: "KIBIYAベーカリー本店", cat: "sweets", price: "¥300〜1,000", note: "天然酵母パンが評判の人気ベーカリー。じっくり発酵させた生地は香りと食感が豊かで、朝から行列ができることもある人気店。", url: "https://kibiyabakery.com/", urlType: "official" },
+    { name: "Mon Peche Mignon", cat: "sweets", price: "¥300〜900", note: "小町通り近くで人気のパン屋。惣菜パンから菓子パンまで種類豊富に揃い、食べ歩き用に一つずつ選ぶのも楽しい。", url: "http://bigot-tokyo.co.jp/", urlType: "official", lat: 35.3233757, lng: 139.5616116 },
+    { name: "Bergfeld鎌倉本店", cat: "sweets", price: "¥300〜1,000", note: "本格ドイツパンが味わえる人気ベーカリー。ハード系のパンやプレッツェルなど本場仕込みのラインナップが揃い、パン好きに支持されている。", url: "http://bergfeld-kamakura.com/", urlType: "official" },
+    { name: "Umi鎌倉", cat: "washoku", price: "¥1,500〜3,000", note: "地魚と鎌倉野菜を使った体に優しいオーガニック和食店。素材本来の味を活かした料理は、健康志向の人にも安心して選べる一軒。", url: "https://gdab103.gorp.jp/", urlType: "official", lat: 35.3123297, lng: 139.5477739 },
+    { name: "からすみ蕎麦 月と松", cat: "washoku", price: "¥1,500〜2,500", note: "からすみを使った個性派蕎麦が評判の人気店。濃厚な旨みが蕎麦に絡み合う一杯は、他では味わえない独自の魅力を持つ。", url: "https://whaves.co.jp/tsukitomatsu/", urlType: "official" },
+    { name: "鎌倉ふくみ", cat: "washoku", price: "¥3,000〜5,000", note: "落ち着いた雰囲気の和食店。季節の食材を活かした丁寧な料理が並び、静かに食事を楽しみたい大人のひとときにふさわしい。", url: "https://kamakurafukumi.com/", urlType: "official" },
+    { name: "鎌倉 以ず美 鎌倉店", cat: "washoku", price: "¥2,000〜4,000", note: "鎌倉駅近くにある割烹料理店。旬の食材を使った会席料理が味わえ、接待や特別な日の食事にも選ばれている。", url: "https://www.kamakura-izumi.com/", urlType: "official" },
+    { name: "和彩 八倉", cat: "washoku", price: "¥1,500〜2,500", note: "小町通りにある元祖しらす丼専門店。湘南しらすをたっぷり使った丼は鎌倉ならではの味わいで、観光客にも地元客にも人気。", url: "https://www.wasai-yakura.com/en", urlType: "official" },
+    { name: "寿司ビストロ 禅", cat: "washoku", price: "¥3,000〜6,000", note: "寿司とビストロを融合させた創作和食店。伝統的な寿司にフレンチの技法を取り入れた新しいスタイルが評判を呼んでいる。", url: "https://www.sushibistrozen.com/", urlType: "official" },
+    { name: "鮪お重 栄町 鎌倉小町店", cat: "seafood", price: "¥2,000〜3,500", note: "豊洲仲卸から直接仕入れる本マグロのお重が名物。贅沢にマグロを盛り付けた一品は、食べ応えと満足感を求める人におすすめ。", url: "https://maguroojuu.foodre.jp/", urlType: "official" },
+    { name: "anchoa", cat: "seafood", price: "¥3,000〜6,000", note: "鎌倉で高評価を集める隠れた名店。魚介料理を中心に丁寧な仕事が光る一皿が並び、知る人ぞ知る存在として評判を集めている。", url: "https://www.google.com/search?q=anchoa%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search" },
+    { name: "大三", cat: "seafood", price: "¥2,000〜4,000", note: "鎌倉の実力派海鮮料理店。新鮮な魚介を使った定食や一品料理が揃い、地元客からも長年支持されている老舗の風格を持つ。", url: "https://daizo-cuisine.com/", urlType: "official" },
+    { name: "しらす問屋 とびっちょ本店", cat: "seafood", price: "¥1,500〜2,500", note: "江の島のしらす料理といえばここと言われる名店。生しらす丼をはじめ釜揚げしらすなど様々な食べ方で楽しめ、行列必至の人気店。", url: "http://tobiccho.com/shops/tobiccho", urlType: "official", lat: 35.3013046, lng: 139.4822434 },
+    { name: "遊覧亭", cat: "seafood", price: "¥1,500〜3,000", note: "大正元年創業、江の島シーキャンドル奥に佇む老舗店。長い歴史を持つ店構えで、江の島散策の休憩スポットとしても親しまれている。", url: "https://www.google.com/search?q=%E9%81%8A%E8%A6%A7%E4%BA%AD%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search", lat: 35.2997201, lng: 139.4774035 },
+    { name: "江の島貝作", cat: "seafood", price: "¥1,000〜2,000", note: "創業60年を誇る老舗の磯料理店。サザエなどの磯焼きと生しらすが名物で、江の島参道の食べ歩きスポットとして知られる。", url: "https://enoshima-kaisaku.owst.jp/", urlType: "official" },
+    { name: "江ノ島小屋", cat: "seafood", price: "¥1,500〜3,000", note: "漁港前に位置し、海を眺めながら新鮮な海鮮を楽しめる店。獲れたての魚介を使った料理は、港町ならではの臨場感が魅力。", url: "http://enoshima-koya.com/", urlType: "official" },
+    { name: "IZA", cat: "yoshoku", price: "¥3,000〜6,000", note: "鎌倉で高評価を得ている完全予約制イタリアン。落ち着いた空間でシェフのおまかせコースをじっくり味わえる、特別な日にふさわしい一軒。", url: "https://www.iza2021.com/", urlType: "official", lat: 35.309243, lng: 139.4863265 },
+    { name: "RISTORANTE IL NODO", cat: "yoshoku", price: "¥5,000〜10,000", note: "鎌倉野菜を主役にした予約困難な人気イタリアン。地元食材を活かしたコース料理は評判が高く、早めの予約が必須の名店。", url: "https://ristoranteilnodo.com/", urlType: "official" },
+    { name: "GRAPEREPUBLICINC. VINERIA SALONE", cat: "yoshoku", price: "¥3,000〜6,000", note: "ワインと共に楽しむイタリアンダイニング。豊富なワインセレクションと相性の良い料理の組み合わせが自慢で、ワイン好きにおすすめ。", url: "https://vineria.grape-republic.com/", urlType: "official" },
+    { name: "古民家イタリアンかど屋", cat: "yoshoku", price: "¥2,000〜4,000", note: "古民家をリノベーションした趣あるイタリアン。趣のある空間で、地元食材を使ったイタリア料理をゆったりと味わえる。", url: "https://www.google.com/search?q=%E5%8F%A4%E6%B0%91%E5%AE%B6%E3%82%A4%E3%82%BF%E3%83%AA%E3%82%A2%E3%83%B3%E3%81%8B%E3%81%A9%E5%B1%8B%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search" },
+    { name: "ビタースイート", cat: "yoshoku", price: "¥2,000〜4,000", note: "評価の高い洋食レストラン。落ち着いた雰囲気の中で丁寧に作られた洋食メニューが楽しめ、幅広い世代に支持されている。", url: "https://cafebittersweet.jimdofree.com/", urlType: "official" },
+    { name: "アマルフィイ デラセーラ", cat: "yoshoku", price: "¥2,000〜5,000", note: "七里ヶ浜にある180度オーシャンビューが自慢の店。名物のピザは海を見ながら味わうことでより一層美味しく感じられる、絶景スポット。", url: "https://amalfi-dellasera.com/", urlType: "official" },
+    { name: "RESTAURANT CALISTOGA", cat: "yoshoku", price: "¥3,000〜8,000", note: "七里ヶ浜の高台に位置するカリフォルニア料理のレストラン。海を見渡す開放的なテラス席で、西海岸スタイルの料理とワインを楽しめる。", url: "https://www.calistoga-kamakura.com/en", urlType: "official" },
+    { name: "中華 大新", cat: "chuka", price: "¥800〜1,500", note: "鎌倉駅近くの人気町中華。名物の大新丼と回鍋肉ライスは地元で長年愛される定番メニューで、ボリューム満点なのも嬉しい。", url: "https://www.google.com/search?q=%E4%B8%AD%E8%8F%AF%20%E5%A4%A7%E6%96%B0%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search" },
+    { name: "霹靂", cat: "bar", price: "¥3,000〜6,000", note: "鎌倉では珍しい高評価を誇る隠れ家バー。落ち着いた大人の空間で、こだわりのお酒とともにゆったりとした時間を過ごせる。", url: "https://www.instagram.com/kamakura.hekireki/", urlType: "official", lat: 35.3541786, lng: 139.5348933 },
+    { name: "花と鳥", cat: "bar", price: "¥2,000〜4,000", note: "落ち着いた雰囲気が魅力の人気バー。静かに飲みたい夜にぴったりで、丁寧に作られたカクテルが評判を呼んでいる。", url: "https://www.instagram.com/hanatotori.kamakura/", urlType: "official" },
+    { name: "Beau Temps", cat: "bar", price: "¥3,000〜6,000", note: "長谷の路地裏にひっそりと佇む隠れ家バー。古民家の納屋を改装した空間は雰囲気満点で、知る人ぞ知る特別な一軒。", url: "https://beautemps-kamakura.com/", urlType: "official", lat: 35.3082806, lng: 139.4930231 },
+    { name: "豊島屋本店（鳩サブレー）", cat: "souvenir", price: "¥300〜2,000", note: "鎌倉銘菓「鳩サブレー」の総本家。バターの香り豊かな鳩の形のサブレーは鎌倉土産の代名詞的存在で、パッケージも人気が高い。", url: "https://www.hato.co.jp/", urlType: "official" },
+    { name: "鎌倉ニュージャーマン 鎌倉本店", cat: "souvenir", price: "¥300〜1,500", note: "創業50年を超える老舗洋菓子店。名物のかまくらカスターをはじめ、昔ながらの洋菓子が揃い地元で長く愛され続けている。", url: "https://newgerman.co.jp/", urlType: "official" },
+    { name: "こまち茶屋", cat: "souvenir", price: "¥500〜1,200", note: "本わらび餅が人気の和スイーツ店。注文を受けてから作るできたてのわらび餅は、とろけるような食感が評判を呼んでいる。", url: "https://komachichaya.com/", urlType: "official" },
+    { name: "鎌倉てづくり屋", cat: "souvenir", price: "¥1,000〜3,000", note: "大仏モチーフのがま口が人気の専門店。手作りの温かみが感じられる小物は、鎌倉らしいお土産を探している人にぴったり。", url: "https://www.rakuten.co.jp/kamakuratedukuriya/", urlType: "official", lat: 35.3229864, lng: 139.5530216 },
+    { name: "LONCAFE 江ノ島本店", cat: "cafe", price: "¥1,000〜2,000", note: "テラス席から潮風を感じられるフレンチトースト専門店。ふわとろの食感が評判のフレンチトーストは、江の島散策の合間の一休みに最適。", url: "https://loncafe.jp/", urlType: "official" },
+    { name: "Windera Cafe 七里ヶ浜店", cat: "cafe", price: "¥1,000〜2,000", note: "全席オーシャンビューが自慢のカフェ。富士山を望むロケーションで味わうクリームソーダは、見た目も味も楽しめる人気メニュー。", url: "https://windera.jp/cafe/", urlType: "official" },
+    { name: "カフェ・マディ 江の島店", cat: "cafe", price: "¥1,000〜2,000", note: "江の島の高台から相模湾を一望できる絶景カフェ。テラス席からの眺めは抜群で、景色を楽しみながらゆったりとくつろげる。", url: "https://a811702.gorp.jp/", urlType: "official" },
+    { name: "モケスハワイ 江の島店", cat: "cafe", price: "¥1,000〜2,000", note: "リリコイパンケーキが人気のハワイアンカフェ。南国気分満点の内装とメニューで、江の島にいながらハワイ旅行気分を味わえる。", url: "https://www.mokeskailua-japan.com/", urlType: "official" },
+    { name: "SUNCAFE PARADISE", cat: "cafe", price: "¥1,000〜2,000", note: "トレーラーハウス風の手作り南国カフェ。個性的な外観と自由な雰囲気が特徴で、写真映えするスポットとしても人気を集めている。", url: "https://suncafe-paradise.jp/", urlType: "official" },
+    { name: "サカノシタ", cat: "cafe", price: "¥1,500〜3,000", note: "長谷エリアの古民家カフェの草分け的存在。由比ヶ浜を望むテラス席でゆったりくつろげ、鎌倉らしい落ち着いた時間を過ごせる。", url: "https://www.instagram.com/sacanosita_2115/", urlType: "official", lat: 35.3086712, lng: 139.5331753 },
+    { name: "Inamura Cafe", cat: "cafe", price: "¥1,000〜2,000", note: "稲村ヶ崎の住宅街にひっそりと佇むカフェ。江ノ電が走る様子を眺められるテラス席が人気で、地元の隠れ家的存在として親しまれている。", url: "https://www.google.com/search?q=Inamura%20Cafe%20%E7%A5%9E%E5%A5%88%E5%B7%9D", urlType: "search", lat: 35.3043946, lng: 139.5226686 },
+    { name: "paso by 27 coffee roasters", cat: "cafe", price: "¥800〜1,500", note: "坂ノ下エリアの古民家カフェ。庭園を望む縁側席でくつろぎながら、自家焙煎のコーヒーをゆっくり味わえる隠れた名店。", url: "https://27coffee.jp/pages/paso", urlType: "official" },
+    { name: "なぎさ橋珈琲", cat: "cafe", price: "¥800〜1,500", note: "逗子にある朝7時開店の早朝カフェ。富士山を眺めながらのモーニングは格別で、早起きして訪れる価値のある人気店。", url: "https://www.nagisabashi-coffee.jp/", urlType: "official" },
+    { name: "Enoshima Island Spa (Enoshima Hotel)", cat: "lodging", note: "江の島の天然温泉付きリゾートホテル。相模湾一望の客室、露天風呂付きスイートも。¥25,000〜60,000程度、贅沢な絶景ステイ", url: "https://www.enospa.jp/en", urlType: "official" },
+    { name: "Kamakura Prince Hotel", cat: "lodging", note: "七里ガ浜の高台に立つ老舗ホテル。全室から海と富士山を望む絶景、静かなリゾート気分。¥15,000〜35,000前後", url: "https://www.princehotels.com/kamakura/", urlType: "official" },
+    { name: "Riviera Zushi Marina Malibu Hotel", cat: "lodging", note: "逗子マリーナ内の全室スイート小規模高級ホテル。海とヨットハーバーを望む大人向けラグジュアリー空間", url: "https://en.riviera.co.jp/malibuhotel/", urlType: "official" },
+    { name: "EN HOTEL Fujisawa", cat: "lodging", note: "藤沢駅近くのデザイナーズホテル。自由と休息がテーマのお洒落な客室。¥8,000〜15,000ほどで使いやすい", url: "https://en-hotel.com/fujisawa/", urlType: "official", lat: 35.3362826, lng: 139.4930514 },
+    { name: "Shonan Enoshima Oryori Ryokan Ebisuya", cat: "lodging", note: "創業350年以上の老舗旅館。片瀬東浜と江の島弁天橋を望む絶景の和室、海鮮会席が名物", url: "https://www.gltjp.com/en/directory/item/15603/", urlType: "official" },
+    { name: "Kamakura Rakuan", cat: "lodging", note: "大仏近くの古民家を改装した一日二組限定の宿。静かで落ち着いた鎌倉らしい滞在。¥10,000〜前後", url: "https://kamakura-rakuan.com/?lang=en", urlType: "official", lat: 35.3102663, lng: 139.5340643 },
+    { name: "Guest House Kamejikan", cat: "lodging", note: "材木座の空き家を再生したゲストハウス「亀時間」。地域と繋がるゆったりした時間が魅力。¥4,000〜7,000程度", url: "https://kamejikan.com/en", urlType: "official", lat: 35.3073508, lng: 139.552229 },
+    { name: "Kamakura Hase Youth Hostel", cat: "lodging", note: "長谷駅徒歩4分の老舗ユースホステル。大仏・長谷寺至近、素泊まり¥3,000〜4,000の格安宿", url: "https://www.tripadvisor.com/Hotel_Review-g303156-d6018276-Reviews-Kamakura_Hase_Youth_Hostel-Kamakura_Kanagawa_Prefecture_Kanto.html", urlType: "official" },
+    { name: "IZA Kamakura Guesthouse & Bar", cat: "lodging", note: "由比ヶ浜徒歩1分、バー併設のゲストハウス。旅人同士交流できる賑やかな雰囲気。¥4,000〜8,000程度", url: "http://izaiza.jp/en/kamakura_e/index.html", urlType: "official" },
+    { name: "WeBase Kamakura", cat: "lodging", note: "由比ヶ浜すぐのリノベーションホステル型ホテル。天井高い個室とヨガスタジオ完備、¥10,000〜20,000", url: "https://www.booking.com/hotel/jp/webase.html", urlType: "official", lat: 35.311209, lng: 139.541131 },
+    { name: "Enoshima Guest House 134", cat: "lodging", note: "片瀬江ノ島駅徒歩2分、海好きが集うゲストハウス。キッチン付き客室、自転車レンタルあり。¥5,000〜9,000", url: "https://www.booking.com/hotel/jp/enoshima-guest-house-134.html", urlType: "official" },
+    { name: "Guest House Irodori Kamakura", cat: "lodging", note: "バリアフリー対応、障がいのあるスタッフが働く珍しいゲストハウス。朝食無料、温かいおもてなし", url: "https://guest-house-irodori.kanagawahotels.com/en/", urlType: "official" },
+    { name: "Guest House Kamejikan Zaimokuza (IORI)", cat: "lodging", note: "材木座エリアの古民家系ゲストハウス。光明寺すぐ近く、畳と布団で和の宿体験。¥4,000〜6,000程度", url: "https://kamejikan.com/en/about/zaimokuza", urlType: "official" },
+    { name: "Shonan Enoshima Seaside Guest House", cat: "lodging", note: "江ノ島近くの気取らないゲストハウス。ビーチアクセス良好でカジュアルな滞在向け。¥5,000〜9,000", url: "https://www.agoda.com/shonan-enoshima-seaside-guest-house/hotel/kamakura-jp.html", urlType: "official" },
+    { name: "Space Key Point Riviera Zushi Marina", cat: "lodging", note: "逗子マリーナ内の未来的な円形ガラス張り客室。海を独り占めできるグランピング風ラグジュアリー宿泊", url: "https://en.riviera.co.jp/space_key_point/zushi/index.html", urlType: "official" },
+  ];
+
+  let activeCat = "all";
+  let selectedIndex = null;
+  let map, markers = {};
+
+  function renderFilterBar() {
+    const bar = document.getElementById("filterBar");
+    const catsUsed = [...new Set(SPOTS.map(s => s.cat))];
+    let html = `<button class="chip active" data-cat="all">すべて</button>`;
+    catsUsed.forEach(c => {
+      const meta = CATS[c];
+      html += `<button class="chip" data-cat="${c}"><span class="ico">${meta.icon}</span>${meta.label}</button>`;
+    });
+    bar.innerHTML = html;
+    bar.querySelectorAll(".chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeCat = btn.dataset.cat;
+        bar.querySelectorAll(".chip").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        applyFilter();
+      });
+    });
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById("grid");
+    grid.innerHTML = SPOTS.map((s, i) => {
+      const meta = CATS[s.cat];
+      const metaBits = [];
+      if (s.tag) metaBits.push(`<span>${s.tag}</span>`);
+      if (s.price) metaBits.push(`<span>${s.price}</span>`);
+      const btnClass = s.urlType === "official" ? "" : "search";
+      const btnLabel = s.urlType === "official" ? "🔗 公式サイト" : "🔍 Googleで見る";
+      return `
+      <div class="card ${s.cat === 'venue' ? 'venue' : ''}" data-index="${i}" data-cat="${s.cat}" data-name="${s.name.toLowerCase()}" style="--cat-color:${meta.hex}">
+        <span class="selected-badge">📍 選択中</span>
+        <div class="row1">
+          <h3>${s.name}</h3>
+          <span class="catlabel">${meta.icon} ${meta.label}</span>
+        </div>
+        <div class="meta">${metaBits.join("")}</div>
+        <div class="note">${s.note}</div>
+        ${!s.lat ? '<div class="no-pin">地図に位置情報なし</div>' : ''}
+        <a class="detail-btn ${btnClass}" href="${s.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${btnLabel}</a>
+      </div>`;
+    }).join("");
+
+    grid.querySelectorAll(".card").forEach(card => {
+      card.addEventListener("click", () => selectSpot(parseInt(card.dataset.index), true));
+    });
+  }
+
+  const PAGE_SIZE = 15;
+  let visibleLimit = PAGE_SIZE;
+
+  function applyFilter(resetLimit) {
+    if (resetLimit !== false) visibleLimit = PAGE_SIZE;
+    const q = document.getElementById("searchInput").value.trim().toLowerCase();
+    const cards = [...document.querySelectorAll(".card")];
+    const matched = cards.filter(card => {
+      const matchCat = activeCat === "all" || card.dataset.cat === activeCat;
+      const matchText = !q || card.dataset.name.includes(q);
+      return matchCat && matchText;
+    });
+    cards.forEach(card => card.classList.add("hidden"));
+    matched.forEach((card, i) => card.classList.toggle("hidden", i >= visibleLimit));
+
+    const shownCount = Math.min(matched.length, visibleLimit);
+    document.getElementById("resultNum").textContent = matched.length === shownCount ? `${matched.length}` : `${shownCount} / ${matched.length}`;
+    document.getElementById("emptyState").classList.toggle("show", matched.length === 0);
+    document.getElementById("loadMoreWrap").style.display = matched.length > visibleLimit ? "block" : "none";
+
+    Object.keys(markers).forEach(idx => {
+      const s = SPOTS[idx];
+      const show = activeCat === "all" || s.cat === activeCat;
+      const el = markers[idx].getElement();
+      if (el) el.style.display = show ? "" : "none";
+    });
+  }
+
+  function selectSpot(index, panMap) {
+    selectedIndex = index;
+    document.querySelectorAll(".card").forEach(c => c.classList.toggle("selected", parseInt(c.dataset.index) === index));
+    Object.entries(markers).forEach(([idx, marker]) => {
+      const pinEl = marker.getElement()?.querySelector(".leaflet-pin");
+      if (pinEl) pinEl.classList.toggle("selected", parseInt(idx) === index);
+    });
+    const s = SPOTS[index];
+    if (s.lat && markers[index]) {
+      if (panMap) map.flyTo([s.lat, s.lng], 16, { duration: 0.6 });
+      markers[index].openPopup();
+    }
+  }
+
+  function renderMap() {
+    map = L.map("leafletMap", { scrollWheelZoom: true }).setView([35.315, 139.52], 13);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      maxZoom: 19,
+    }).addTo(map);
+
+    SPOTS.forEach((s, i) => {
+      if (!s.lat) return;
+      const meta = CATS[s.cat];
+      const icon = L.divIcon({
+        className: "",
+        html: `<div class="leaflet-pin" style="background:${meta.hex}"><span>${meta.icon}</span></div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 24],
+        popupAnchor: [0, -24],
+      });
+      const marker = L.marker([s.lat, s.lng], { icon }).addTo(map)
+        .bindPopup(`<b>${s.name}</b><br>${meta.label}${s.tag ? " ・ " + s.tag : ""}`);
+      marker.on("click", () => {
+        selectSpot(i, false);
+        const card = document.querySelector(`.card[data-index="${i}"]`);
+        if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      markers[i] = marker;
+    });
+  }
+
+  renderFilterBar();
+  renderGrid();
+  renderMap();
+  applyFilter();
+  document.getElementById("searchInput").addEventListener("input", () => applyFilter(true));
+  document.getElementById("loadMoreBtn").addEventListener("click", () => {
+    visibleLimit += PAGE_SIZE;
+    applyFilter(false);
+  });
+
+  const backToTop = document.getElementById("backToTop");
+  window.addEventListener("scroll", () => {
+    backToTop.classList.toggle("show", window.scrollY > 600);
+  });
+  backToTop.addEventListener("click", () => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
+</script>
+
+</body>
+</html>
